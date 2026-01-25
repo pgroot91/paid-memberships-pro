@@ -1,5 +1,4 @@
-name: 'Codeception & WordPress Tests'
-
+name: 'Codeception Tests'
 on:
   pull_request:
     paths:
@@ -9,43 +8,39 @@ on:
       - 'composer.json'
       - 'codeception.*.yml'
       - '.github/workflows/tests-php.yml'
-
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         suite:
-          - wpunit
           - acceptance
+          - wpunit
     runs-on: ubuntu-latest
-
     steps:
-      # --------------------------------------------------------------------------
-      # Checkout the repository and TRIC
-      # --------------------------------------------------------------------------
-      - name: Checkout repository
+      # ------------------------------------------------------------------------------
+      # Checkout the repo and tric
+      # ------------------------------------------------------------------------------
+      - name: Checkout the repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-
-      - name: Checkout TRIC
+      - name: Checkout tric
         uses: actions/checkout@v2
         with:
           repository: the-events-calendar/tric
           ref: main
           path: tric
           fetch-depth: 1
-
-      # --------------------------------------------------------------------------
-      # Prepare Composer cache
-      # --------------------------------------------------------------------------
-      - name: Get Composer cache directory
+      # ------------------------------------------------------------------------------
+      # Prepare our composer cache directory
+      # ------------------------------------------------------------------------------
+      - name: Get Composer Cache Directory
         id: get-composer-cache-dir
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
       - uses: actions/cache@v3
         id: composer-cache
         with:
@@ -53,31 +48,23 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
-
-      # --------------------------------------------------------------------------
-      # Set TRIC environment variables
-      # --------------------------------------------------------------------------
-      - name: Set up TRIC environment
+      # ------------------------------------------------------------------------------
+      # Initialize tric
+      # ------------------------------------------------------------------------------
+      - name: Set up tric env vars
         run: |
           echo "TRIC_BIN=${GITHUB_WORKSPACE}/tric/tric" >> $GITHUB_ENV
           echo "TRIC_WP_DIR=${GITHUB_WORKSPACE}/tric/_wordpress" >> $GITHUB_ENV
           echo "TRIC_WORDPRESS_DOCKERFILE=Dockerfile.base" >> $GITHUB_ENV
-          echo "TRIC=1" >> $GITHUB_ENV
-          echo "CI=1" >> $GITHUB_ENV
-
-      # --------------------------------------------------------------------------
-      # Start ssh-agent (required by TRIC/SLIC)
-      # --------------------------------------------------------------------------
+      - name: Set run context for tric
+        run: echo "TRIC=1" >> $GITHUB_ENV && echo "CI=1" >> $GITHUB_ENV
       - name: Start ssh-agent
         run: |
-          mkdir -p "${HOME}/.ssh"
-          ssh-agent -a /tmp/ssh_agent.sock
-          echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
-
-      # --------------------------------------------------------------------------
-      # Initialize TRIC
-      # --------------------------------------------------------------------------
-      - name: Initialize TRIC for CI
+          mkdir -p "${HOME}/.ssh";
+          ssh-agent -a /tmp/ssh_agent.sock;
+      - name: Export SSH_AUTH_SOCK env var
+        run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
+      - name: Set up tric for CI
         run: |
           cd ${GITHUB_WORKSPACE}/..
           ${TRIC_BIN} here
@@ -89,56 +76,45 @@ jobs:
           ${TRIC_BIN} debug on
           ${TRIC_BIN} info
           ${TRIC_BIN} config
-
-      # --------------------------------------------------------------------------
-      # Start plugin container first (required for composer/vendor)
-      # --------------------------------------------------------------------------
-      - name: Start plugin container
-        run: ${TRIC_BIN} up
-
-      # --------------------------------------------------------------------------
-      # Install plugin dependencies inside the container
-      # --------------------------------------------------------------------------
-      - name: Install plugin dependencies
+      # ------------------------------------------------------------------------------
+      # Start the Chrome container
+      # ------------------------------------------------------------------------------
+      - name: Start the Chrome container
+        if: ${{ matrix.suite == 'acceptance' }}
+        run: ${TRIC_BIN} up chrome
+      # ------------------------------------------------------------------------------
+      # Set up plugin
+      # ------------------------------------------------------------------------------
+      - name: Set up plugin
         run: |
+          docker network prune -f
           ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} shell --command "composer install --no-interaction --prefer-dist --no-progress"
-
-      # --------------------------------------------------------------------------
-      # Verify Codeception binary exists
-      # --------------------------------------------------------------------------
-      - name: Verify Codeception
-        run: |
-          ${TRIC_BIN} shell --command "[ -f vendor/bin/codecept ] && echo 'Codeception OK' || (echo 'Codeception missing' && exit 1)"
-
-      # --------------------------------------------------------------------------
-      # Start WordPress container
-      # --------------------------------------------------------------------------
-      - name: Start WordPress container
+          ${TRIC_BIN} composer install
+      # ------------------------------------------------------------------------------
+      # Init WordPress container
+      # ------------------------------------------------------------------------------
+      - name: Init the WordPress container
         run: |
           ${TRIC_BIN} up wordpress
           ${TRIC_BIN} site-cli core version
-
-      # --------------------------------------------------------------------------
-      # Install and activate TwentyTwenty theme for acceptance tests
-      # --------------------------------------------------------------------------
+      # ------------------------------------------------------------------------------
+      # Install and activate TwentyTwenty
+      # ------------------------------------------------------------------------------
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
-        run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
-
-      # --------------------------------------------------------------------------
-      # Run the test suite
-      # --------------------------------------------------------------------------
-      - name: Run Codeception suite
+        run:  ${TRIC_BIN} site-cli theme install twentytwenty --activate
+      # ------------------------------------------------------------------------------
+      # Run tests
+      # ------------------------------------------------------------------------------
+      - name: Run suite tests
         run: ${TRIC_BIN} run ${{ matrix.suite }} --ext DotReporter
-
-      # --------------------------------------------------------------------------
-      # Upload artifacts (screenshots, logs) if tests fail
-      # --------------------------------------------------------------------------
+      # ------------------------------------------------------------------------------
+      # Upload artifacts (On failure)
+      # ------------------------------------------------------------------------------
       - name: Upload artifacts
-        if: failure()
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          name: output-${{ matrix.suite }}
+          name: output ${{ matrix.suite }}
           path: tests/_output/
           retention-days: 7
