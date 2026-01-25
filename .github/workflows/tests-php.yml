@@ -94,7 +94,7 @@ jobs:
       # Set up plugin
       # ------------------------------------------------------------------------------
       - name: Verify Codeception binary
-        run: ${TRIC_BIN} bash -c "ls -l vendor/bin"
+        run: ${TRIC_BIN} shell --command "ls -l vendor/bin"
       # ------------------------------------------------------------------------------
       # Init WordPress container
       # ------------------------------------------------------------------------------
