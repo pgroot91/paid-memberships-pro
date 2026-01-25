@@ -32,7 +32,7 @@ jobs:
           key: ${{ runner.os }}-npm-cache
 
       - name: Install NPM dependencies
-        run: npm ci
+        run: npm install
 
       - name: Cache Composer dependencies
         uses: actions/cache@v3
