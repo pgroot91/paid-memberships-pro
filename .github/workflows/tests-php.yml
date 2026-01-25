@@ -85,11 +85,16 @@ jobs:
       # ------------------------------------------------------------------------------
       # Set up plugin
       # ------------------------------------------------------------------------------
-      - name: Set up plugin
+      - name: Set up plugin (Composer install)
         run: |
           docker network prune -f
           ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install
+          ${TRIC_BIN} composer install --no-interaction --prefer-dist --no-progress
+      # ------------------------------------------------------------------------------
+      # Set up plugin
+      # ------------------------------------------------------------------------------
+      - name: Verify Codeception binary
+        run: ${TRIC_BIN} bash -c "ls -l vendor/bin"
       # ------------------------------------------------------------------------------
       # Init WordPress container
       # ------------------------------------------------------------------------------
