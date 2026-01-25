@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
+        php: ["7.4", "8.5"]
         browser: ["chrome", "firefox"]
         
     steps:
@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots-${{ matrix.php }}-${{ matrix.browser }}
-          path: tests/e2e/cypress/screenshots
+          path: tests/e2e/cypress/reports/screenshots
 
       - name: Upload Cypress videos
         if: always()
@@ -83,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos-${{ matrix.php }}-${{ matrix.browser }}
-          path: tests/e2e/cypress/videos
+          path: tests/e2e/cypress/reports/videos
 
       - name: Fail job if tests failed
         if: failure()
