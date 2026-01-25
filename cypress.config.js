@@ -6,6 +6,10 @@ module.exports = defineConfig({
   screenshotsFolder: "tests/e2e/cypress/reports/screenshots",
   videosFolder: "tests/e2e/cypress/reports/videos",
   video: true,
+  retries: {
+    runMode: 1,
+    openMode: 0,
+  },
   e2e: {
     specPattern: "tests/e2e/cypress/integration/**/*.spec.{js,jsx,ts,tsx}",
     supportFile: "tests/e2e/cypress/support/e2e.js",
@@ -18,5 +22,8 @@ module.exports = defineConfig({
         }
       });
     },
+  },
+  env: {
+    MAILPIT_URL: "http://localhost:8025",
   },
 });
