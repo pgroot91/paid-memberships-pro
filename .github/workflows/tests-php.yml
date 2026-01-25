@@ -102,7 +102,7 @@ jobs:
       - name: Install plugin dependencies
         run: |
           ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install --no-interaction --prefer-dist --no-progress
+          ${TRIC_BIN} shell --command "composer install --no-interaction --prefer-dist --no-progress"
 
       # --------------------------------------------------------------------------
       # Verify Codeception binary exists
