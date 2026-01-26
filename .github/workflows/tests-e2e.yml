@@ -57,17 +57,6 @@ jobs:
       - name: Start WordPress Environment
         run: npm run env:start
 
-      - name: Wait for WordPress to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:8889 | grep -q "WordPress"; then
-              echo "WordPress is ready";
-              break;
-            fi
-            echo "Waiting for WordPress... ($i/30)";
-            sleep 5;
-          done
-
       - name: Run Cypress Tests in ${{ matrix.browser }}
         run: |
           npx cypress run --browser ${{ matrix.browser }} --config baseUrl=http://localhost:8889
