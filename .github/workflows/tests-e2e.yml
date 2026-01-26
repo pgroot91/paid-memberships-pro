@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["7.4", "8.3"]
+        php: ["7.4", "8.4"]
         browser: ["chrome", "firefox"]
-
+        
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Cache NPM dependencies
         uses: actions/cache@v3
@@ -47,27 +47,23 @@ jobs:
         run: |
           echo "{\"config\": {\"phpVersion\": \"${{ matrix.php }}\"}}" > .wp-env.override.json
 
-      - name: Start full Docker environment
-        run: npm run env:run:all
+      - name: Start WordPress Environment
+        run: npm run env:start
 
-      - name: Get test WordPress container IP
-        id: wp_ip
+      - name: Wait for WordPress to be ready
         run: |
-          WP_CONTAINER=$(docker ps --filter "name=-tests-wordpress-1" --format "{{.Names}}")
-          if [ -z "$WP_CONTAINER" ]; then
-            echo "❌ Cannot find test WordPress container"
-            exit 1
-          fi
-          WP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $WP_CONTAINER)
-          echo "Test WordPress container: $WP_CONTAINER"
-          echo "Test WordPress IP: $WP_IP"
-          echo "WP_IP=$WP_IP" >> $GITHUB_ENV
+          for i in {1..30}; do
+            if curl -s http://localhost:8889 | grep -q "WordPress"; then
+              echo "WordPress is ready";
+              break;
+            fi
+            echo "Waiting for WordPress... ($i/30)";
+            sleep 5;
+          done
 
       - name: Run Cypress Tests in ${{ matrix.browser }}
         run: |
-          npx cypress run \
-            --browser ${{ matrix.browser }} \
-            --config-file cypress.config.test.js
+          npx cypress run --browser ${{ matrix.browser }} --config baseUrl=http://localhost:8889
 
       - name: Fix permissions for Cypress output
         if: always()
@@ -79,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots-${{ matrix.php }}-${{ matrix.browser }}
-          path: tests/e2e/cypress/reports/screenshots
+          path: tests/e2e/cypress/screenshots
 
       - name: Upload Cypress videos
         if: always()
@@ -87,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos-${{ matrix.php }}-${{ matrix.browser }}
-          path: tests/e2e/cypress/reports/videos
+          path: tests/e2e/cypress/videos
 
       - name: Fail job if tests failed
         if: failure()
