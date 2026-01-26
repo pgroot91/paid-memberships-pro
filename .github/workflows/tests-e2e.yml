@@ -29,6 +29,18 @@ jobs:
           --health-retries=10
 
     steps:
+      - name: Wait for Mailpit
+        run: |
+          for i in {1..20}; do
+            if curl -s http://localhost:8025 > /dev/null; then
+              echo "Mailpit is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Mailpit did not start"
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@v2
 

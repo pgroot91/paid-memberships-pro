@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+  # Add Mailpit for email testing
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: paid-memberships-pro-mailpit
+    ports:
+      - "8026:8025"  # Web UI (changed from 8025 to avoid conflicts)
+      - "1026:1025"  # SMTP server (changed from 1025 to avoid conflicts)
+    networks:
+      - wpenv
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  # Configure WordPress containers to use Mailpit
+  wordpress:
+    depends_on:
+      - mailpit
+    environment:
+      # WordPress SMTP configuration
+      WORDPRESS_CONFIG_EXTRA: |
+        /* Mailpit SMTP Configuration */
+        define('SMTP_HOST', 'mailpit');
+        define('SMTP_PORT', 1025);
+        define('SMTP_USER', '');
+        define('SMTP_PASS', '');
+        define('SMTP_FROM', 'wordpress@paid-memberships-pro.local');
+        define('SMTP_NAME', 'Paid Memberships Pro');
+
+  tests-wordpress:
+    depends_on:
+      - mailpit
+    environment:
+      # WordPress SMTP configuration for tests
+      WORDPRESS_CONFIG_EXTRA: |
+        /* Mailpit SMTP Configuration */
+        define('SMTP_HOST', 'mailpit');
+        define('SMTP_PORT', 1025);
+        define('SMTP_USER', '');
+        define('SMTP_PASS', '');
+        define('SMTP_FROM', 'wordpress@paid-memberships-pro.local');
+        define('SMTP_NAME', 'Paid Memberships Pro');
+
+networks:
+  wpenv:
+    external: true
