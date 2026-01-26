@@ -88,12 +88,31 @@ jobs:
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
         run: |
-          docker run --network host \
+          # Find the WordPress test container
+          WP_CONTAINER=$(docker ps --format "{{.ID}} {{.Names}}" | grep "\-tests-wordpress-1" | awk '{print $1}')
+          if [ -z "$WP_CONTAINER" ]; then
+            echo "Cannot find WordPress container. Exiting."
+            exit 1
+          fi
+
+          # Detect the Docker network attached to WordPress container
+          WP_NETWORK=$(docker inspect "$WP_CONTAINER" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}')
+          if [ -z "$WP_NETWORK" ]; then
+            echo "Cannot detect WordPress network. Exiting."
+            exit 1
+          fi
+
+          echo "Using WordPress network: $WP_NETWORK"
+
+          # Run Cypress on the same network
+          docker run --rm \
+            --network "$WP_NETWORK" \
             -e CYPRESS_BASE_URL=http://localhost:8889 \
             -v ${{ github.workspace }}:/e2e \
             -w /e2e \
             cypress/included:latest \
             --browser ${{ matrix.browser }} \
+            --config-file cypress.config.test.js \
             --config baseUrl=http://localhost:8889
 
       - name: Fix permissions for Cypress output
