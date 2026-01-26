@@ -10,7 +10,7 @@ function DevConfigMailpit($phpmailer) {
     error_log('📬 PHPMailer init hook triggered');
 
     $phpmailer->isSMTP();
-    $phpmailer->Host       = 'pm-pro-mailpit'; // Mailpit SMTP host
+    $phpmailer->Host       = 'paid-memberships-pro-mailpit'; // Mailpit SMTP host
     $phpmailer->Port       = 1025;                        // Mailpit SMTP port
     $phpmailer->SMTPAuth   = false;                       // No auth for Mailpit by default
     $phpmailer->SMTPSecure = false;                       // No encryption for local SMTP
