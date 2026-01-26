@@ -15,7 +15,14 @@ jobs:
       matrix:
         php: ["7.4", "8.4"]
         browser: ["chrome", "firefox"]
-        
+
+    services:
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
