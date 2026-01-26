@@ -28,6 +28,9 @@ services:
         define('SMTP_PASS', '');
         define('SMTP_FROM', 'wordpress@paid-memberships-pro.local');
         define('SMTP_NAME', 'Paid Memberships Pro');
+        define('WP_HOME', 'http://localhost:8888');
+        define('WP_SITEURL', 'http://localhost:8888');
+
 
   tests-wordpress:
     depends_on:
@@ -42,6 +45,8 @@ services:
         define('SMTP_PASS', '');
         define('SMTP_FROM', 'wordpress@paid-memberships-pro.local');
         define('SMTP_NAME', 'Paid Memberships Pro');
+        define('WP_HOME', 'http://localhost:8889');
+        define('WP_SITEURL', 'http://localhost:8889');
 
 networks:
   wpenv:
