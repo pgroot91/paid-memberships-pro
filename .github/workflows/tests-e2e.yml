@@ -76,15 +76,32 @@ jobs:
 
       - name: Wait for WordPress to be ready
         run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:8889 | grep -q "WordPress"; then
-              echo "WordPress is ready";
-              break;
-            fi
-            echo "Waiting for WordPress... ($i/30)";
-            sleep 5;
-          done
+          # Find the WordPress test container
+          WP_CONTAINER=$(docker ps --format "{{.ID}} {{.Names}}" | grep "\-tests-wordpress-1" | awk '{print $1}')
+          if [ -z "$WP_CONTAINER" ]; then
+            echo "Cannot find WordPress container. Exiting."
+            exit 1
+          fi
 
+          # Get the container's IP in its Docker network
+          WP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$WP_CONTAINER")
+          if [ -z "$WP_IP" ]; then
+            echo "Cannot detect WordPress IP. Exiting."
+            exit 1
+          fi
+
+          echo "Waiting for WordPress on $WP_IP..."
+
+          # Wait until WordPress responds
+          for i in {1..30}; do
+            if curl -s "http://$WP_IP" | grep -q "WordPress"; then
+              echo "WordPress is ready"
+              break
+            fi
+            echo "Waiting for WordPress... ($i/30)"
+            sleep 5
+          done
+          
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
         run: |
