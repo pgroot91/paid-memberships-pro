@@ -48,11 +48,21 @@ jobs:
           echo "{\"config\": {\"phpVersion\": \"${{ matrix.php }}\"}}" > .wp-env.override.json
 
       - name: Start full Docker environment
-        run: npm run env:run:all
+        id: env
+        run: |
+          # Run env:run:all and capture the network name
+          OUTPUT=$(npm run env:run:all)
+          echo "$OUTPUT"
+          WP_NETWORK=$(echo "$OUTPUT" | grep "Detected WordPress network:" | awk '{print $4}')
+          echo "WP_NETWORK=$WP_NETWORK" >> $GITHUB_ENV
 
       - name: Run Cypress Tests in ${{ matrix.browser }}
         run: |
-          npx cypress run --browser ${{ matrix.browser }} --config-file cypress.config.test.js
+          bash ./bin/cypress.sh \
+            "$WP_NETWORK" \
+            "http://localhost:8889" \
+            "${{ matrix.browser }}" \
+            "cypress.config.test.js"
 
       - name: Fix permissions for Cypress output
         if: always()
