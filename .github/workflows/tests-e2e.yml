@@ -15,7 +15,7 @@ jobs:
       matrix:
         php: ["7.4", "8.3"]
         browser: ["chrome", "firefox"]
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,21 +48,27 @@ jobs:
           echo "{\"config\": {\"phpVersion\": \"${{ matrix.php }}\"}}" > .wp-env.override.json
 
       - name: Start full Docker environment
-        id: env
+        run: npm run env:run:all
+
+      - name: Get test WordPress container IP
+        id: wp_ip
         run: |
-          # Run env:run:all and capture the network name
-          OUTPUT=$(npm run env:run:all)
-          echo "$OUTPUT"
-          WP_NETWORK=$(echo "$OUTPUT" | grep "Detected WordPress network:" | awk '{print $4}')
-          echo "WP_NETWORK=$WP_NETWORK" >> $GITHUB_ENV
+          WP_CONTAINER=$(docker ps --filter "name=-tests-wordpress-1" --format "{{.Names}}")
+          if [ -z "$WP_CONTAINER" ]; then
+            echo "❌ Cannot find test WordPress container"
+            exit 1
+          fi
+          WP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $WP_CONTAINER)
+          echo "Test WordPress container: $WP_CONTAINER"
+          echo "Test WordPress IP: $WP_IP"
+          echo "WP_IP=$WP_IP" >> $GITHUB_ENV
 
       - name: Run Cypress Tests in ${{ matrix.browser }}
         run: |
-          bash ./bin/cypress.sh \
-            "$WP_NETWORK" \
-            "http://localhost:8889" \
-            "${{ matrix.browser }}" \
-            "cypress.config.test.js"
+          npx cypress run \
+            --browser ${{ matrix.browser }} \
+            --config baseUrl="http://$WP_IP" \
+            --config-file cypress.config.test.js
 
       - name: Fix permissions for Cypress output
         if: always()
