@@ -67,7 +67,6 @@ jobs:
         run: |
           npx cypress run \
             --browser ${{ matrix.browser }} \
-            --config baseUrl="http://$WP_IP" \
             --config-file cypress.config.test.js
 
       - name: Fix permissions for Cypress output
