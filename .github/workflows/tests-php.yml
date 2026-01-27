@@ -95,7 +95,7 @@ jobs:
       - name: Set up plugin and install dependencies
         run: |
           ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install
+          ${TRIC_BIN} composer install --dev
       # -------------------------------------------------------------------
       # Load environment variables for Codeception
       # -------------------------------------------------------------------
