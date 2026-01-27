@@ -97,9 +97,6 @@ jobs:
       - name: Start MySQL container
         run: ${TRIC_BIN} up db
 
-      - name: Wait for DB to be ready
-        run: ${TRIC_BIN} db-ready
-
       # -------------------------------------------------------------------
       # Start WordPress container
       # -------------------------------------------------------------------
