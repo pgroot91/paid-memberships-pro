@@ -77,25 +77,12 @@ jobs:
           ${TRIC_BIN} info
           ${TRIC_BIN} config
       # ------------------------------------------------------------------------------
-      # Start the Chrome container
-      # ------------------------------------------------------------------------------
-      - name: Start the Chrome container
-        if: ${{ matrix.suite == 'acceptance' }}
-        run: ${TRIC_BIN} up chrome
-      # ------------------------------------------------------------------------------
       # Init WordPress container
       # ------------------------------------------------------------------------------
       - name: Init the WordPress container
         run: |
           ${TRIC_BIN} up wordpress
           ${TRIC_BIN} site-cli core version
-      # ------------------------------------------------------------------------------
-      # Set up plugin
-      # ------------------------------------------------------------------------------
-      - name: Set up plugin
-        run: |
-          ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install
       # -------------------------------------------------------------------
       # Set up plugin + install dependencies
       # -------------------------------------------------------------------
@@ -109,6 +96,10 @@ jobs:
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
         run:  ${TRIC_BIN} site-cli theme install twentytwenty --activate
+      # Start Chrome (only for acceptance)
+      - name: Start Chrome container
+        if: ${{ matrix.suite == 'acceptance' }}
+        run: ${TRIC_BIN} up chrome
       # ------------------------------------------------------------------------------
       # Run tests
       # ------------------------------------------------------------------------------
