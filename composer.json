@@ -28,7 +28,8 @@
   "require-dev": {
     "codeception/codeception": "^4.2",
     "vlucas/phpdotenv": "^5.5",
-    "php-webdriver/webdriver": "^1.11"
+    "php-webdriver/webdriver": "^1.11",
+    "lucatume/wp-browser": "3.x-dev"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
