@@ -110,4 +110,3 @@ jobs:
           name: output ${{ matrix.suite }}
           path: tests/_output/
           retention-days: 7
-          
