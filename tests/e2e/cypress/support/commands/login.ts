@@ -1,4 +1,6 @@
-Cypress.Commands.add("loginByApi", (username, password) => {
+/// <reference types="cypress" />
+
+Cypress.Commands.add("loginByApi", (username: string, password: string) => {
   cy.request({
     url: "/wp-login.php",
     method: "POST",
@@ -23,7 +25,7 @@ Cypress.Commands.add("loginByApi", (username, password) => {
       const loginCookie = cookies.find((c) =>
         c.name.startsWith("wordpress_logged_in"),
       );
-      expect(loginCookie).to.exist;
+      if (!loginCookie) throw new Error("Login cookie not found");
 
       const userId = loginCookie.value.split("|")[1];
       const localStorageKey = `WP_DATA_USER_${userId}`;
@@ -40,7 +42,7 @@ Cypress.Commands.add("loginByApi", (username, password) => {
   });
 });
 
-Cypress.Commands.add("loginByForm", (username, password) => {
+Cypress.Commands.add("loginByForm", (username: string, password: string) => {
   cy.session([username], () => {
     cy.visit("/wp-login.php");
 
@@ -58,7 +60,7 @@ Cypress.Commands.add("loginByForm", (username, password) => {
       const loginCookie = cookies.find((c) =>
         c.name.startsWith("wordpress_logged_in"),
       );
-      expect(loginCookie).to.exist;
+      if (!loginCookie) throw new Error("Login cookie not found");
 
       const userId = loginCookie.value.split("|")[1];
       const localStorageKey = `WP_DATA_USER_${userId}`;

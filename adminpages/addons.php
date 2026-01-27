@@ -57,22 +57,22 @@
 			pmpro_showMessage();
 		?>
 		<div class="wp-filter">
-			<ul class="filter-links">
-				<li class="addons-search" style="display: none;"><a href="#search"><?php esc_html_e( 'Search Results', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="all" href="#all" class="current"><?php esc_html_e( 'All', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="popular" href="#popular"><?php esc_html_e( 'Popular', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="free" href="#free"><?php esc_html_e( 'Free', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="premium" href="#premium"><?php esc_html_e( 'Premium', 'paid-memberships-pro' ); ?></a></li>
-				<li>| <a data-toggle="view" data-search="view" data-view="active" href="#active"><?php esc_html_e( 'Active', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="inactive" href="#inactive"><?php esc_html_e( 'Inactive', 'paid-memberships-pro' ); ?></a></li>
-				<li><a data-toggle="view" data-search="view" data-view="update" href="#update"><?php esc_html_e( 'Update Available', 'paid-memberships-pro' ); ?></a></li>
+			<ul class="filter-links" data-testid="addons-filter-list">
+				<li data-testid="addons-filter-list-item" class="addons-search" style="display: none;"><a href="#search"><?php esc_html_e( 'Search Results', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="all" href="#all" class="current"><?php esc_html_e( 'All', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="popular" href="#popular"><?php esc_html_e( 'Popular', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="free" href="#free"><?php esc_html_e( 'Free', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="premium" href="#premium"><?php esc_html_e( 'Premium', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="active" href="#active"><?php esc_html_e( 'Active', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="inactive" href="#inactive"><?php esc_html_e( 'Inactive', 'paid-memberships-pro' ); ?></a></li>
+				<li data-testid="addons-filter-list-item"><a data-toggle="view" data-search="view" data-view="update" href="#update"><?php esc_html_e( 'Update Available', 'paid-memberships-pro' ); ?></a></li>
 			</ul>
 			<div class="search-form">
 				<label class="screen-reader-text" for="search-plugins"><?php esc_html_e( 'Search Add Ons', 'paid-memberships-pro' ); ?></label>
 				<?php
 					$pmpro_addon_search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 				?>
-				<input type="search" name="s" id="search-add-ons" data-search="content" class="wp-filter-search" placeholder="<?php esc_attr_e( 'Search Add Ons...', 'paid-memberships-pro' ); ?>" value="<?php echo esc_attr( $pmpro_addon_search ); ?>">
+				<input type="search" name="s" id="search-add-ons" data-search="content" data-testid="addons-search-input" class="wp-filter-search" placeholder="<?php esc_attr_e( 'Search Add Ons...', 'paid-memberships-pro' ); ?>" value="<?php echo esc_attr( $pmpro_addon_search ); ?>">
 			</div>
 		</div> <!-- end wp-filter -->
 		<br class="clear">
@@ -169,14 +169,14 @@
 						$view = implode( ' ', array_unique( $views ) );
 					?>
 				<div id="<?php echo esc_attr( $addon['Slug'] ); ?>" class="<?php echo esc_attr( $class ); ?>" data-search-content="<?php echo esc_attr( $addon['Name'] ); ?> <?php echo esc_attr( $addon['Slug'] ); ?> <?php echo esc_attr( $addon['Description'] ); ?> <?php echo esc_attr( $addon['License'] ); ?> <?php echo esc_attr( $view ); ?>" data-search-license="<?php echo esc_attr( $addon['License'] ); ?>" data-search-view="<?php echo esc_attr( $view ); ?>">
-					<div class="add-on-item">
+					<div class="add-on-item" data-testid="addon-item-<?php echo esc_attr( $addon['Slug'] ); ?>">
 						<div class="details">
 								<?php if ( 'uninstalled' !== $addon['status'] ) : ?>
-									<button type="button" class="dropdown-arrow" aria-haspopup="true" aria-expanded="false">
+									<button type="button" class="dropdown-arrow" data-testid="toggle-actions-menu" aria-haspopup="true" aria-expanded="false">
 										<span class="screen-reader-text"><?php esc_html_e( 'Toggle actions menu', 'paid-memberships-pro' ); ?></span>
 										<span class="dashicons dashicons-ellipsis"></span>
 									</button>
-									<div class="pmpro-add-on-actions-menu" role="menu" aria-hidden="true">
+									<div class="pmpro-add-on-actions-menu" data-testid="pmpro-add-on-actions-menu" role="menu" aria-hidden="true">
 										<ul>
 											<?php if ( $addon['status'] === 'inactive' ) { ?>
 											<li>
@@ -224,7 +224,7 @@
 									</a>
 								<?php } ?>
 							<?php } ?>
-							<div class="add-on-name">
+							<div class="add-on-name" data-testid="addon-name">
 								<?php if ( ! empty( $addon['PluginURI'] ) ) { ?>
 									<a target="_blank" href="<?php echo esc_url( $plugin_link ); ?>">
 								<?php } ?>
@@ -233,7 +233,7 @@
 									</a>
 								<?php } ?>
 							</div> <!-- end add-on-name -->
-							<div class="add-on-description">
+							<div class="add-on-description" data-testid="addon-description">
 								<p><?php echo esc_html( $addon['Description'] ); ?></p>
 								<p>
 								<?php
@@ -365,7 +365,7 @@
 
 									if ( is_array( $action_button ) ) {
 										?>
-										<button class="<?php echo esc_attr( $action_button['style'] ); ?>" ><?php echo esc_html( $action_button['label'] ); ?></button>
+										<button class="<?php echo esc_attr( $action_button['style'] ); ?>" data-testid="addon-action-button"><?php echo esc_html( $action_button['label'] ); ?></button>
 										<?php
 										if ( ! empty( $action_button['hidden_fields'] ) ) {
 											foreach ( $action_button['hidden_fields'] as $name => $value ) {
@@ -530,11 +530,11 @@
 			});
 		</script>
 	</div> <!-- end pmpro-admin-add-ons -->
-	<div id="pmpro-popup" class="pmpro-popup-overlay">
+	<div id="pmpro-popup" class="pmpro-popup-overlay" data-testid="pmpro-popup">
 		<span class="pmpro-popup-helper"></span>
 		<div class="pmpro-popup-wrap">
-			<span id="pmpro-popup-inner">
-				<a class="pmproPopupCloseButton" href="#" title="<?php esc_attr_e( 'Close Popup', 'paid-memberships-pro' ); ?>"><span class="dashicons dashicons-no"></span></a>
+			<span id="pmpro-popup-inner" data-testid="pmpro-popup-inner">
+				<a class="pmproPopupCloseButton" data-testid="pmpro-popup-close-button" href="#" title="<?php esc_attr_e( 'Close Popup', 'paid-memberships-pro' ); ?>"><span class="dashicons dashicons-no"></span></a>
 				<a title="Paid Memberships Pro - Membership Plugin for WordPress" target="_blank" rel="noopener noreferrer" href="https://www.paidmembershipspro.com/pricing/?utm_source=plugin&utm_medium=pmpro-addons&utm_campaign=pricing&utm_content=pmpro-popup"><img src="<?php echo esc_url( PMPRO_URL . '/images/Paid-Memberships-Pro.png' ); ?>" width="350" height="75" border="0" alt="Paid Memberships Pro(c) - All Rights Reserved" /></a>
 				<h1><?php printf( esc_html__( 'Get %1$s and more with a %2$s license.', 'paid-memberships-pro' ), '<strong id="addon-name"></strong>', '<strong id="addon-license"></strong>' ); ?></h1>
 				<p><a class="button button-primary button-hero" href="https://www.paidmembershipspro.com/pricing/?utm_source=plugin&utm_medium=pmpro-addons&utm_campaign=pricing&utm_content=pmpro-popup"><strong><?php esc_html_e( 'View Plans and Pricing', 'paid-memberships-pro' ); ?></strong></a></p>
