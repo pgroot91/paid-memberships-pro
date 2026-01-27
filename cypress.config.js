@@ -1,3 +1,5 @@
+/// <reference types="cypress" />
+
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
@@ -12,7 +14,7 @@ module.exports = defineConfig({
   },
   e2e: {
     specPattern: ["tests/e2e/cypress/integration/**/*.spec.{js,jsx,ts,tsx}", "tests/e2e/cypress/api/**/*.spec.{js,jsx,ts,tsx}"],
-    supportFile: "tests/e2e/cypress/support/e2e.js",
+    supportFile: "tests/e2e/cypress/support/e2e.ts",
     setupNodeEvents(on, config) {
       on("before:browser:launch", (browser = {}, launchOptions) => {
         if (browser.name === "chrome" && browser.isHeadless) {
