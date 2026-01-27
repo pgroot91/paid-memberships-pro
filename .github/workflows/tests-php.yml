@@ -83,20 +83,26 @@ jobs:
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} up chrome
       # ------------------------------------------------------------------------------
-      # Set up plugin
-      # ------------------------------------------------------------------------------
-      - name: Set up plugin
-        run: |
-          docker network prune -f
-          ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install
-      # ------------------------------------------------------------------------------
       # Init WordPress container
       # ------------------------------------------------------------------------------
       - name: Init the WordPress container
         run: |
           ${TRIC_BIN} up wordpress
           ${TRIC_BIN} site-cli core version
+      # ------------------------------------------------------------------------------
+      # Set up plugin
+      # ------------------------------------------------------------------------------
+      - name: Set up plugin
+        run: |
+          ${TRIC_BIN} use paid-memberships-pro
+          ${TRIC_BIN} composer install
+      # -------------------------------------------------------------------
+      # Set up plugin + install dependencies
+      # -------------------------------------------------------------------
+      - name: Set up plugin and install dependencies
+        run: |
+          ${TRIC_BIN} use paid-memberships-pro
+          ${TRIC_BIN} composer install
       # ------------------------------------------------------------------------------
       # Install and activate TwentyTwenty
       # ------------------------------------------------------------------------------
