@@ -1,4 +1,5 @@
 name: 'Codeception Tests'
+
 on:
   pull_request:
     paths:
@@ -8,6 +9,8 @@ on:
       - 'composer.json'
       - 'codeception.*.yml'
       - '.github/workflows/tests-php.yml'
+  workflow_dispatch:
+
 jobs:
   test:
     strategy:
@@ -17,16 +20,18 @@ jobs:
           - acceptance
           - wpunit
     runs-on: ubuntu-latest
+
     steps:
-      # ------------------------------------------------------------------------------
-      # Checkout the repo and tric
-      # ------------------------------------------------------------------------------
-      - name: Checkout the repository
+      # -------------------------------------------------------------------
+      # Checkout repo and tric
+      # -------------------------------------------------------------------
+      - name: Checkout repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
+
       - name: Checkout tric
         uses: actions/checkout@v2
         with:
@@ -34,13 +39,15 @@ jobs:
           ref: main
           path: tric
           fetch-depth: 1
-      # ------------------------------------------------------------------------------
-      # Prepare our composer cache directory
-      # ------------------------------------------------------------------------------
+
+      # -------------------------------------------------------------------
+      # Composer cache
+      # -------------------------------------------------------------------
       - name: Get Composer Cache Directory
         id: get-composer-cache-dir
         run: |
           echo "::set-output name=dir::$(composer config cache-files-dir)"
+
       - uses: actions/cache@v3
         id: composer-cache
         with:
@@ -48,22 +55,29 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
-      # ------------------------------------------------------------------------------
-      # Initialize tric
-      # ------------------------------------------------------------------------------
+
+      # -------------------------------------------------------------------
+      # Set up Tric environment
+      # -------------------------------------------------------------------
       - name: Set up tric env vars
         run: |
           echo "TRIC_BIN=${GITHUB_WORKSPACE}/tric/tric" >> $GITHUB_ENV
           echo "TRIC_WP_DIR=${GITHUB_WORKSPACE}/tric/_wordpress" >> $GITHUB_ENV
           echo "TRIC_WORDPRESS_DOCKERFILE=Dockerfile.base" >> $GITHUB_ENV
+
       - name: Set run context for tric
-        run: echo "TRIC=1" >> $GITHUB_ENV && echo "CI=1" >> $GITHUB_ENV
+        run: |
+          echo "TRIC=1" >> $GITHUB_ENV
+          echo "CI=1" >> $GITHUB_ENV
+
       - name: Start ssh-agent
         run: |
-          mkdir -p "${HOME}/.ssh";
-          ssh-agent -a /tmp/ssh_agent.sock;
-      - name: Export SSH_AUTH_SOCK env var
+          mkdir -p "${HOME}/.ssh"
+          ssh-agent -a /tmp/ssh_agent.sock
+
+      - name: Export SSH_AUTH_SOCK
         run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
+
       - name: Set up tric for CI
         run: |
           cd ${GITHUB_WORKSPACE}/..
@@ -76,19 +90,31 @@ jobs:
           ${TRIC_BIN} debug on
           ${TRIC_BIN} info
           ${TRIC_BIN} config
-      # ------------------------------------------------------------------------------
-      # Start the Chrome container (Only for acceptance tests)
-      # ------------------------------------------------------------------------------
-      - name: Start Chrome container
-        if: ${{ matrix.suite == 'acceptance' }}
-        run: ${TRIC_BIN} up chrome
-      # ------------------------------------------------------------------------------
-      # Init WordPress container
-      # ------------------------------------------------------------------------------
-      - name: Init the WordPress container
+
+      # -------------------------------------------------------------------
+      # Start DB container and wait for it
+      # -------------------------------------------------------------------
+      - name: Start MySQL container
+        run: ${TRIC_BIN} up db
+
+      - name: Wait for DB to be ready
+        run: ${TRIC_BIN} db-ready
+
+      # -------------------------------------------------------------------
+      # Start WordPress container
+      # -------------------------------------------------------------------
+      - name: Start WordPress container
         run: |
           ${TRIC_BIN} up wordpress
           ${TRIC_BIN} site-cli core version
+
+      # -------------------------------------------------------------------
+      # Start Chrome (only for acceptance tests)
+      # -------------------------------------------------------------------
+      - name: Start Chrome container
+        if: ${{ matrix.suite == 'acceptance' }}
+        run: ${TRIC_BIN} up chrome
+
       # -------------------------------------------------------------------
       # Set up plugin + install dependencies
       # -------------------------------------------------------------------
@@ -96,6 +122,7 @@ jobs:
         run: |
           ${TRIC_BIN} use paid-memberships-pro
           ${TRIC_BIN} composer install --dev
+
       # -------------------------------------------------------------------
       # Load environment variables for Codeception
       # -------------------------------------------------------------------
@@ -103,20 +130,23 @@ jobs:
         run: |
           ${TRIC_BIN} use paid-memberships-pro
           export $(grep -v '^#' .env.testing.tric | xargs)
-      # ------------------------------------------------------------------------------
-      # Install and activate TwentyTwenty
-      # ------------------------------------------------------------------------------
+
+      # -------------------------------------------------------------------
+      # Install and activate TwentyTwenty theme (acceptance only)
+      # -------------------------------------------------------------------
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
-        run:  ${TRIC_BIN} site-cli theme install twentytwenty --activate
-      # ------------------------------------------------------------------------------
-      # Run tests
-      # ------------------------------------------------------------------------------
+        run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
+
+      # -------------------------------------------------------------------
+      # Run Codeception tests
+      # -------------------------------------------------------------------
       - name: Run suite tests
         run: ${TRIC_BIN} run ${{ matrix.suite }} --ext DotReporter
-      # ------------------------------------------------------------------------------
-      # Upload artifacts (On failure)
-      # ------------------------------------------------------------------------------
+
+      # -------------------------------------------------------------------
+      # Upload artifacts on failure
+      # -------------------------------------------------------------------
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: failure()
