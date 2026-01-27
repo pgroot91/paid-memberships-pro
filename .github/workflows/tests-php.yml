@@ -76,7 +76,9 @@ jobs:
           ${TRIC_BIN} debug on
           ${TRIC_BIN} info
           ${TRIC_BIN} config
-      # Start Chrome (only for acceptance)
+      # ------------------------------------------------------------------------------
+      # Start the Chrome container (Only for acceptance tests)
+      # ------------------------------------------------------------------------------
       - name: Start Chrome container
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} up chrome
