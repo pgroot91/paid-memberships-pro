@@ -1,4 +1,4 @@
-name: 'Codeception Tests'
+name: "Codeception Tests"
 on: workflow_dispatch
 jobs:
   test:
@@ -94,7 +94,7 @@ jobs:
       # ------------------------------------------------------------------------------
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
-        run:  ${TRIC_BIN} site-cli theme install twentytwenty --activate
+        run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
       # ------------------------------------------------------------------------------
       # Run tests
       # ------------------------------------------------------------------------------
