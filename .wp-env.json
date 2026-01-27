@@ -4,7 +4,7 @@
     "development": {
       "plugins": ["."],
       "mappings": {
-        "wp-content/mu-plugins/email-smtp-dev.php": "./tests/e2e/files/mu-plugins/email-smtp-dev/email-smtp-dev.php"
+        "wp-content/mu-plugins/email-smtp-dev.php": "./tests/e2e/mu-plugins/email-smtp-dev/email-smtp-dev.php"
       },
       "config": {
         "WP_DEBUG": true,
@@ -18,7 +18,7 @@
     "tests": {
       "plugins": ["."],
       "mappings": {
-        "wp-content/mu-plugins/email-smtp-test.php": "./tests/e2e/files/mu-plugins/email-smtp-test/email-smtp-test.php"
+        "wp-content/mu-plugins/email-smtp-test.php": "./tests/e2e/mu-plugins/email-smtp-test/email-smtp-test.php"
       },
       "config": {
         "WP_DEBUG": true,
