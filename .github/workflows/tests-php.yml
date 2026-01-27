@@ -17,21 +17,21 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - acceptance
           - wpunit
+          - acceptance
     runs-on: ubuntu-latest
     steps:
       # ----------------------------------------------------------------------
-      # Checkout the repository and tric
+      # Checkout repo and Tric
       # ----------------------------------------------------------------------
-      - name: Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
 
-      - name: Checkout tric
+      - name: Checkout Tric
         uses: actions/checkout@v2
         with:
           repository: the-events-calendar/tric
@@ -55,16 +55,13 @@ jobs:
             ${{ runner.os }}-composer-
 
       # ----------------------------------------------------------------------
-      # Initialize Tric
+      # Set up Tric environment
       # ----------------------------------------------------------------------
       - name: Set up Tric env vars
         run: |
           echo "TRIC_BIN=${GITHUB_WORKSPACE}/tric/tric" >> $GITHUB_ENV
           echo "TRIC_WP_DIR=${GITHUB_WORKSPACE}/tric/_wordpress" >> $GITHUB_ENV
           echo "TRIC_WORDPRESS_DOCKERFILE=Dockerfile.base" >> $GITHUB_ENV
-
-      - name: Set run context for Tric
-        run: |
           echo "TRIC=1" >> $GITHUB_ENV
           echo "CI=1" >> $GITHUB_ENV
 
@@ -72,9 +69,7 @@ jobs:
         run: |
           mkdir -p "${HOME}/.ssh"
           ssh-agent -a /tmp/ssh_agent.sock
-
-      - name: Export SSH_AUTH_SOCK
-        run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
+          echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
 
       - name: Set up Tric for CI
         run: |
@@ -95,37 +90,40 @@ jobs:
       - name: Start DB container
         run: ${TRIC_BIN} up db
 
-      - name: Wait for database to be ready
+      - name: Set Tric target
+        run: ${TRIC_BIN} use paid-memberships-pro
+
+      - name: Wait for DB to be ready
         run: |
           ${TRIC_BIN} exec db bash -c "until mysqladmin ping -h db -u root -ppassword --silent; do sleep 2; done"
 
       - name: Start WordPress container
         run: ${TRIC_BIN} up wordpress
 
+      - name: Wait for WordPress to be ready
+        run: |
+          ${TRIC_BIN} exec wordpress bash -c "until wp core is-installed --allow-root; do sleep 2; done"
+
       - name: Start Chrome container (acceptance only)
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} up chrome
 
       # ----------------------------------------------------------------------
-      # Set up plugin + install dependencies
+      # Install dependencies
       # ----------------------------------------------------------------------
-      - name: Set up plugin and install dependencies
-        run: |
-          ${TRIC_BIN} use paid-memberships-pro
-          ${TRIC_BIN} composer install --dev
+      - name: Install plugin dependencies
+        run: ${TRIC_BIN} composer install --dev
 
       # ----------------------------------------------------------------------
       # Load environment variables for Codeception
       # ----------------------------------------------------------------------
-      - name: Load environment variables for Codeception
-        run: |
-          ${TRIC_BIN} use paid-memberships-pro
-          export $(grep -v '^#' .env.testing.tric | xargs)
+      - name: Load Codeception env
+        run: export $(grep -v '^#' .env.testing.tric | xargs)
 
       # ----------------------------------------------------------------------
-      # Install and activate TwentyTwenty for acceptance tests
+      # Install and activate TwentyTwenty theme (acceptance only)
       # ----------------------------------------------------------------------
-      - name: Install and activate TwentyTwenty
+      - name: Install TwentyTwenty theme
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
 
