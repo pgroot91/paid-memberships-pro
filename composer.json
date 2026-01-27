@@ -29,10 +29,5 @@
   "prefer-stable": true,
   "extra": {
     "installer-name": "paid-memberships-pro"
-  },
-  "config": {
-    "allow-plugins": {
-      "composer/installers": true
-    }
   }
 }
