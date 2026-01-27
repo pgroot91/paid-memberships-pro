@@ -20,12 +20,11 @@ jobs:
           - acceptance
           - wpunit
     runs-on: ubuntu-latest
-
     steps:
-      # -------------------------------------------------------------------
-      # Checkout repo and tric
-      # -------------------------------------------------------------------
-      - name: Checkout repository
+      # ----------------------------------------------------------------------
+      # Checkout the repository and tric
+      # ----------------------------------------------------------------------
+      - name: Checkout the repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -40,13 +39,12 @@ jobs:
           path: tric
           fetch-depth: 1
 
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       # Composer cache
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       - name: Get Composer Cache Directory
         id: get-composer-cache-dir
-        run: |
-          echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - uses: actions/cache@v3
         id: composer-cache
@@ -56,16 +54,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      # -------------------------------------------------------------------
-      # Set up Tric environment
-      # -------------------------------------------------------------------
-      - name: Set up tric env vars
+      # ----------------------------------------------------------------------
+      # Initialize Tric
+      # ----------------------------------------------------------------------
+      - name: Set up Tric env vars
         run: |
           echo "TRIC_BIN=${GITHUB_WORKSPACE}/tric/tric" >> $GITHUB_ENV
           echo "TRIC_WP_DIR=${GITHUB_WORKSPACE}/tric/_wordpress" >> $GITHUB_ENV
           echo "TRIC_WORDPRESS_DOCKERFILE=Dockerfile.base" >> $GITHUB_ENV
 
-      - name: Set run context for tric
+      - name: Set run context for Tric
         run: |
           echo "TRIC=1" >> $GITHUB_ENV
           echo "CI=1" >> $GITHUB_ENV
@@ -78,7 +76,7 @@ jobs:
       - name: Export SSH_AUTH_SOCK
         run: echo "SSH_AUTH_SOCK=/tmp/ssh_agent.sock" >> $GITHUB_ENV
 
-      - name: Set up tric for CI
+      - name: Set up Tric for CI
         run: |
           cd ${GITHUB_WORKSPACE}/..
           ${TRIC_BIN} here
@@ -91,59 +89,55 @@ jobs:
           ${TRIC_BIN} info
           ${TRIC_BIN} config
 
-      # -------------------------------------------------------------------
-      # Start DB container and wait for it
-      # -------------------------------------------------------------------
-      - name: Start MySQL container
+      # ----------------------------------------------------------------------
+      # Start containers
+      # ----------------------------------------------------------------------
+      - name: Start DB container
         run: ${TRIC_BIN} up db
 
-      # -------------------------------------------------------------------
-      # Start WordPress container
-      # -------------------------------------------------------------------
-      - name: Start WordPress container
+      - name: Wait for database to be ready
         run: |
-          ${TRIC_BIN} up wordpress
-          ${TRIC_BIN} site-cli core version
+          ${TRIC_BIN} exec db bash -c "until mysqladmin ping -h db -u root -ppassword --silent; do sleep 2; done"
 
-      # -------------------------------------------------------------------
-      # Start Chrome (only for acceptance tests)
-      # -------------------------------------------------------------------
-      - name: Start Chrome container
+      - name: Start WordPress container
+        run: ${TRIC_BIN} up wordpress
+
+      - name: Start Chrome container (acceptance only)
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} up chrome
 
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       # Set up plugin + install dependencies
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       - name: Set up plugin and install dependencies
         run: |
           ${TRIC_BIN} use paid-memberships-pro
           ${TRIC_BIN} composer install --dev
 
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       # Load environment variables for Codeception
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       - name: Load environment variables for Codeception
         run: |
           ${TRIC_BIN} use paid-memberships-pro
           export $(grep -v '^#' .env.testing.tric | xargs)
 
-      # -------------------------------------------------------------------
-      # Install and activate TwentyTwenty theme (acceptance only)
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # Install and activate TwentyTwenty for acceptance tests
+      # ----------------------------------------------------------------------
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
         run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
 
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       # Run Codeception tests
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       - name: Run suite tests
         run: ${TRIC_BIN} run ${{ matrix.suite }} --ext DotReporter
 
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       # Upload artifacts on failure
-      # -------------------------------------------------------------------
+      # ----------------------------------------------------------------------
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: failure()
