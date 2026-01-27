@@ -26,7 +26,8 @@
     "php": ">=7.4"
   },
   "require-dev": {
-    "codeception/codeception": "^4.2"
+    "codeception/codeception": "^4.2",
+    "vlucas/phpdotenv": "^5.5"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
