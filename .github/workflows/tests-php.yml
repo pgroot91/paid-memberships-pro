@@ -96,6 +96,13 @@ jobs:
         run: |
           ${TRIC_BIN} use paid-memberships-pro
           ${TRIC_BIN} composer install
+      # -------------------------------------------------------------------
+      # Load environment variables for Codeception
+      # -------------------------------------------------------------------
+      - name: Load environment variables for Codeception
+        run: |
+          ${TRIC_BIN} use paid-memberships-pro
+          export $(grep -v '^#' .env.testing.tric | xargs)
       # ------------------------------------------------------------------------------
       # Install and activate TwentyTwenty
       # ------------------------------------------------------------------------------
