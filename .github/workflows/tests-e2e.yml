@@ -124,6 +124,7 @@ jobs:
         run: |
           echo "❌ One or more e2e tests failed."
           exit 1
+          
       - name: Stop WordPress Environment
         if: always()
         run: npm run env:stop
