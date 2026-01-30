@@ -9,13 +9,53 @@ on:
       - "**"
 
 jobs:
+  wp-env-prebuild:
+    name: Prebuild WordPress Environment
+    runs-on: ubuntu-latest
+    outputs:
+      wp-env-cache-key: prebuilt-wp-env
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --engine-strict=false
+      - run: composer install
+
+      - name: Start wp-env once to initialize DB & plugins
+        run: |
+          npm run env:start
+          sleep 10
+          npm run env:stop
+
+      - name: Prebuild wp-env Docker image with DB
+        run: |
+          docker commit $(docker ps -alq) wp-env-prebuilt:latest
+          mkdir -p docker-cache
+          docker save wp-env-prebuilt:latest -o docker-cache/wp-env-images.tar
+
+      - name: Cache wp-env Docker image
+        uses: actions/cache@v3
+        with:
+          path: docker-cache/wp-env-images.tar
+          key: wp-env-docker-${{ github.ref_name }}
+
+      - name: Cleanup old Docker images
+        run: |
+          docker image prune -af || true
+
   cypress:
+    name: Cypress E2E Tests
+    needs: wp-env-prebuild
     runs-on: ubuntu-latest
     strategy:
       matrix:
         php: ["7.4", "8.3"]
         browser: ["chrome", "firefox", "webkit"]
-      
+
     services:
       mailpit:
         image: axllent/mailpit:latest
@@ -29,102 +69,90 @@ jobs:
           --health-retries=10
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache
-
-      - name: Cache Cypress binary
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/Cypress
           key: ${{ runner.os }}-cypress-${{ hashFiles('package-lock.json') }}
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
 
-      - name: Install NPM dependencies
-        run: npm ci
-      
-      - name: Install WebKit system dependencies (Linux)
-        if: runner.os == 'Linux' && matrix.browser == 'webkit'
-        run: npx playwright install-deps webkit
+      - uses: actions/cache@v3
+        with:
+          path: docker-cache/wp-env-images.tar
+          key: wp-env-docker-${{ github.ref_name }}
 
-      - name: Install Playwright browsers
-        if: matrix.browser == 'webkit'
-        run: npx playwright install webkit
+      - name: Load cached Docker image
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        run: docker load -i docker-cache/wp-env-images.tar
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v3
+      - run: npm ci --engine-strict=false
+
+      # Install WebKit deps & browser only once per PHP version
+      - name: Install WebKit system dependencies and browser (Linux)
+        if: runner.os == 'Linux' && matrix.browser == 'webkit' && matrix.php == '7.4'
+        run: |
+          npx playwright install-deps webkit
+          npx playwright install webkit
+
+      - uses: actions/cache@v3
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - name: Install Composer dependencies
-        run: composer install
+      - run: composer install
 
-      - name: Set PHP version for wp-env
-        run: |
+      - run: |
           echo "{\"config\": {\"phpVersion\": \"${{ matrix.php }}\"}}" > .wp-env.override.json
 
-      - name: Start WordPress Environment
-        run: npm run env:start
+      - name: Start WordPress Environment from prebuilt image
+        run: docker run -d -p 8889:80 wp-env-prebuilt:latest
 
       - name: Wait for WordPress to be ready
         run: |
           for i in {1..30}; do
             if curl -s http://localhost:8889 | grep -q "WordPress"; then
-              echo "WordPress is ready";
-              break;
+              echo "WordPress is ready"
+              break
             fi
-            echo "Waiting for WordPress... ($i/30)";
-            sleep 5;
+            echo "Waiting for WordPress... ($i/30)"
+            sleep 5
           done
 
-      - name: Run Cypress Tests in ${{ matrix.browser }}
-        id: tests
-        run: |
-          npx cypress run --browser ${{ matrix.browser }} --config-file=cypress.config.test.js
+      - id: tests
+        run: npx cypress run --browser ${{ matrix.browser }} --config-file=cypress.config.test.js
 
-      - name: Fix permissions for Cypress output
-        if: always()
+      - if: always()
         run: sudo chown -R $USER:$USER tests/e2e/cypress
 
-      - name: Upload Cypress screenshots
-        if: always()
-        continue-on-error: true
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots-${{ matrix.php }}-${{ matrix.browser }}
           path: tests/e2e/cypress/reports/screenshots
 
-      - name: Upload Cypress videos
-        if: always()
-        continue-on-error: true
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos-${{ matrix.php }}-${{ matrix.browser }}
           path: tests/e2e/cypress/reports/videos
 
-      - name: Fail job if tests failed
-        if: failure()
+      - if: failure()
         run: |
           echo "❌ One or more e2e tests failed."
           exit 1
-          
-      - name: Stop WordPress Environment
-        if: always()
-        run: npm run env:stop
+
+      - if: always()
+        run: docker stop $(docker ps -q --filter ancestor=wp-env-prebuilt:latest)
+
+      - if: always()
+        run: docker image prune -af || true
