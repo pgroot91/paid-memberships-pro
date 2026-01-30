@@ -63,6 +63,10 @@ jobs:
         if: runner.os == 'Linux' && matrix.browser == 'webkit'
         run: npx playwright install-deps webkit
 
+      - name: Install Playwright browsers
+        if: matrix.browser == 'webkit'
+        run: npx playwright install webkit
+
       - name: Cache Composer dependencies
         uses: actions/cache@v3
         with:
