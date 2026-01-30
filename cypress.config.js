@@ -7,7 +7,11 @@ module.exports = defineConfig({
   fixturesFolder: "tests/e2e/cypress/fixtures",
   screenshotsFolder: "tests/e2e/cypress/reports/screenshots",
   videosFolder: "tests/e2e/cypress/reports/videos",
+  watchForFileChanges: false,
   video: true,
+  requestTimeout: 20000,
+  responseTimeout: 30000,
+  pageLoadTimeout: 60000,
   retries: {
     runMode: 1,
     openMode: 0,

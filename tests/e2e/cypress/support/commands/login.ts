@@ -47,10 +47,10 @@ Cypress.Commands.add("loginByForm", (username: string, password: string) => {
     cy.visit("/wp-login.php");
 
     // Fill in login form
-    cy.get("#user_login").should("be.visible").type(username);
+    cy.get("#user_login").should("be.visible").type(username, { delay: 50, log: false });
     cy.get("#user_pass")
       .should("be.visible")
-      .type(password + "{enter}");
+      .type(password + "{enter}", { delay: 50, log: false });
 
     // Confirm we landed on wp-admin
     cy.location("pathname").should("contain", "/wp-admin/");
