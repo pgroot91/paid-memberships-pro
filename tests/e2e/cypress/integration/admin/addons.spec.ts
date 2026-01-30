@@ -34,10 +34,10 @@ describe("Paid Memberships Pro > Add Ons", { testIsolation: false }, () => {
   });
 
   context("No License, Upsell Notice", { testIsolation: false }, () => {
-    const addons = ["Add PayPal Express", "Member Network Sites"];
+    const addons = [{name: "Add PayPal Express", licenseType: "Standard"}, {name: "Member Network Sites", licenseType: "Plus"}];
     addons.forEach((addon) => {
-      it(`Should not be able to install a premium Add On "${addon}" without an active license, upsell popup should appear`, () => {
-        cy.contains(addon);
+      it(`Should not be able to install "${addon.name} (License: ${addon.licenseType})" without an active license, upsell popup should appear`, () => {
+        cy.contains(addon.name);
       });
     });
   });

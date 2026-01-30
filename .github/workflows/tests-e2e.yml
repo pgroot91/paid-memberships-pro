@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         php: ["7.4", "8.3"]
-        browser: ["chrome", "firefox"]
+        browser: ["chrome", "firefox", "webkit"]
       
     services:
       mailpit:
