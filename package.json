@@ -32,8 +32,8 @@
     "cy:run:dev": "run-s env:destroy env:start:dev cy:run:launch:dev",
     "cy:open:test": "run-s env:destroy env:start:test cy:open:launch:test",
     "cy:run:test": "run-s env:destroy env:start:test cy:run:launch:test",
-    "env:run:all": "bash ./bin/docker-up.sh",
-    "env:run:stop": "bash ./bin/docker-down.sh"
+    "env:start:all": "bash ./bin/docker-up.sh",
+    "env:stop:all": "bash ./bin/docker-down.sh"
   },
   "keywords": [
     "wordpress",

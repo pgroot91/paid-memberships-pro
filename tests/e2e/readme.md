@@ -21,7 +21,7 @@ This project provides end-to-end (E2E) testing for a WordPress environment using
 | `npm run cy:run:dev`      | Starts the dev environment, cleans it, and runs Cypress tests in headless mode.   |
 | `npm run cy:open:test`    | Starts the test environment, cleans it, and opens Cypress Test Runner UI.         |
 | `npm run cy:run:test`     | Starts the test environment, cleans it, and runs Cypress tests in headless mode.  |
-| `npm run env:start:all`   | Starts the test and dev environment, and start phpMyAdmin and Mailpit.            |
+| `npm run env:start:all`   | Starts the test and dev environment, and starts phpMyAdmin and Mailpit.           |
 | `npm run env:stop:all`    | Stops the test and dev environment, and stops and deletes phpMyAdmin and Mailpit. |
 
 ## Start development and test environment
