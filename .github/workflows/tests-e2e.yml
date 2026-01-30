@@ -36,6 +36,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Cache NPM dependencies
         uses: actions/cache@v3
@@ -43,11 +44,23 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-npm-cache
 
+      - name: Cache Cypress binary
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('package-lock.json') }}
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
       - name: Install NPM dependencies
         run: npm ci
       
       - name: Install WebKit system dependencies (Linux)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.browser == 'webkit'
         run: npx playwright install-deps webkit
 
       - name: Cache Composer dependencies
