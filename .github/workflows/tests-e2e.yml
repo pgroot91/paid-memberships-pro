@@ -45,6 +45,10 @@ jobs:
 
       - name: Install NPM dependencies
         run: npm ci
+      
+      - name: Install WebKit system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps webkit
 
       - name: Cache Composer dependencies
         uses: actions/cache@v3
