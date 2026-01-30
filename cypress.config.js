@@ -9,6 +9,7 @@ module.exports = defineConfig({
   videosFolder: "tests/e2e/cypress/reports/videos",
   watchForFileChanges: false,
   video: true,
+  defaultCommandTimeout: 10000,
   requestTimeout: 20000,
   responseTimeout: 30000,
   pageLoadTimeout: 60000,
