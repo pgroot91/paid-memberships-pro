@@ -77,9 +77,18 @@ jobs:
       - name: Install Composer dependencies
         run: composer install
 
+      - name: Remove any cached wp-env
+        run: rm -rf .wp-env
+
       - name: Set PHP version for wp-env
         run: |
-          echo "{\"config\": {\"phpVersion\": \"${{ matrix.php }}\"}}" > .wp-env.override.json
+          echo '{
+            "env": {
+              "tests": {
+                "phpVersion": "'${{ matrix.php }}'"
+              }
+            }
+          }' > .wp-env.override.json
 
       - name: Start WordPress Environment
         run: npm run env:start
