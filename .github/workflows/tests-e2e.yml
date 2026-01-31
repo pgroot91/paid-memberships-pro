@@ -10,21 +10,15 @@ on:
 
 jobs:
   cypress:
+    name: Run Cypress Test Matrix (WordPress, PHP, Browser)
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        phpVersion:
-          - '7.4'
-          - '8.0'
-          - '8.1'
-          - '8.2'
-          - '8.3'
-        wpVersion:
-          - '6.5'
-          - '6.7'
-          - '6.9'
-        browser: ["chrome"]
+        wpVersion: ["5.2", "6.9"]
+        phpVersion: ["5.6", "7.4", "8.5"]
+        browser: ["chrome", firefox", "webkit"]
       
     services:
       mailpit:
