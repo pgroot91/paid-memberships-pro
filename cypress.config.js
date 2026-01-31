@@ -25,5 +25,6 @@ module.exports = defineConfig({
   env: {
     MAILPIT_URL: "http://localhost:8025",
   },
-  experimentalWebKitSupport: true
+  experimentalWebKitSupport: true,
+  experimentalMemoryManagement: true,
 });

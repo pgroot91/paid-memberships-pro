@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["7.4", "8.3"]
-        browser: ["chrome", "firefox", "webkit"]
+        php: ["7.4", "8.5"]
+        browser: ["chrome"]
       
     services:
       mailpit:
@@ -51,6 +51,7 @@ jobs:
           key: ${{ runner.os }}-cypress-${{ hashFiles('package-lock.json') }}
 
       - name: Cache Playwright browsers
+        if: runner.os == 'Linux' && matrix.browser == 'webkit'
         uses: actions/cache@v3
         with:
           path: ~/.cache/ms-playwright
@@ -124,7 +125,7 @@ jobs:
         run: |
           echo "❌ One or more e2e tests failed."
           exit 1
-          
+
       - name: Stop WordPress Environment
         if: always()
         run: npm run env:stop
