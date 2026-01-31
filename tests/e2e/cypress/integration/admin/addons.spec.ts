@@ -1,3 +1,4 @@
+import { assertUpsellPopup, installAddon, navigateToLicenseActivationPageFromUpsellPopup } from "../../support/commands/admin/addons";
 import { ROUTES } from "../../support/routes";
 
 describe("Paid Memberships Pro > Add Ons", { testIsolation: false }, () => {
@@ -39,7 +40,11 @@ describe("Paid Memberships Pro > Add Ons", { testIsolation: false }, () => {
       cy.loginByForm(admin.username, admin.password);
       cy.visit(ROUTES.ADMIN_ADDONS);
     });
-    it("Should be able to install an Add On", () => {});
+
+    it("Should be able to install and activate the add-on: PayFast Gateway", () => {
+    });
+
+    it("Should be able to install another add-on", () => {});
   });
 
   context("No License, Upsell Notice", { testIsolation: false }, () => {
@@ -54,8 +59,14 @@ describe("Paid Memberships Pro > Add Ons", { testIsolation: false }, () => {
     ];
     addons.forEach((addon) => {
       it(`Should not be able to install "${addon.name} (License: ${addon.licenseType})" without an active license, upsell popup should appear`, () => {
-        cy.contains(addon.name);
+        installAddon(addon.name);
+        assertUpsellPopup(addon.name, addon.licenseType);
       });
+    });
+
+    it("Should be able to navigate to the license page from the upsell popup", () => {
+      installAddon("Email Confirmation");
+      navigateToLicenseActivationPageFromUpsellPopup();
     });
   });
 });

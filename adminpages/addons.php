@@ -72,7 +72,7 @@
 				<?php
 					$pmpro_addon_search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 				?>
-				<input type="search" name="s" id="search-add-ons" data-search="content" data-testid="addons-search-input" class="wp-filter-search" placeholder="<?php esc_attr_e( 'Search Add Ons...', 'paid-memberships-pro' ); ?>" value="<?php echo esc_attr( $pmpro_addon_search ); ?>">
+				<input type="search" name="s" id="search-add-ons" data-search="content" data-testid="add-ons-search-input" class="wp-filter-search" placeholder="<?php esc_attr_e( 'Search Add Ons...', 'paid-memberships-pro' ); ?>" value="<?php echo esc_attr( $pmpro_addon_search ); ?>">
 			</div>
 		</div> <!-- end wp-filter -->
 		<br class="clear">
@@ -169,7 +169,7 @@
 						$view = implode( ' ', array_unique( $views ) );
 					?>
 				<div id="<?php echo esc_attr( $addon['Slug'] ); ?>" class="<?php echo esc_attr( $class ); ?>" data-search-content="<?php echo esc_attr( $addon['Name'] ); ?> <?php echo esc_attr( $addon['Slug'] ); ?> <?php echo esc_attr( $addon['Description'] ); ?> <?php echo esc_attr( $addon['License'] ); ?> <?php echo esc_attr( $view ); ?>" data-search-license="<?php echo esc_attr( $addon['License'] ); ?>" data-search-view="<?php echo esc_attr( $view ); ?>">
-					<div class="add-on-item" data-testid="addon-item-<?php echo esc_attr( $addon['Slug'] ); ?>">
+					<div class="add-on-item" data-testid="add-on-item-<?php echo esc_attr( $addon['Slug'] ); ?> add-on-item">
 						<div class="details">
 								<?php if ( 'uninstalled' !== $addon['status'] ) : ?>
 									<button type="button" class="dropdown-arrow" data-testid="toggle-actions-menu" aria-haspopup="true" aria-expanded="false">
@@ -224,7 +224,7 @@
 									</a>
 								<?php } ?>
 							<?php } ?>
-							<div class="add-on-name" data-testid="addon-name">
+							<div class="add-on-name" data-testid="add-on-name">
 								<?php if ( ! empty( $addon['PluginURI'] ) ) { ?>
 									<a target="_blank" href="<?php echo esc_url( $plugin_link ); ?>">
 								<?php } ?>
@@ -233,7 +233,7 @@
 									</a>
 								<?php } ?>
 							</div> <!-- end add-on-name -->
-							<div class="add-on-description" data-testid="addon-description">
+							<div class="add-on-description" data-testid="add-on-description">
 								<p><?php echo esc_html( $addon['Description'] ); ?></p>
 								<p>
 								<?php
@@ -259,7 +259,7 @@
 								</p>
 							</div>
 						</div> <!-- end details -->
-						<div class="actions">
+						<div class="actions" data-testid="add-on-actions">
 							<div class="status">
 							<?php
 							$license_labels = array(
@@ -365,7 +365,7 @@
 
 									if ( is_array( $action_button ) ) {
 										?>
-										<button class="<?php echo esc_attr( $action_button['style'] ); ?>" data-testid="addon-action-button"><?php echo esc_html( $action_button['label'] ); ?></button>
+										<button class="<?php echo esc_attr( $action_button['style'] ); ?>" data-testid="add-on-action-button"><?php echo esc_html( $action_button['label'] ); ?></button>
 										<?php
 										if ( ! empty( $action_button['hidden_fields'] ) ) {
 											foreach ( $action_button['hidden_fields'] as $name => $value ) {
