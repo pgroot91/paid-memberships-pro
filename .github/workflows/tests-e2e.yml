@@ -95,10 +95,10 @@ jobs:
             sleep 5;
           done
 
-      - name: Verify PHP via WordPress
+      - name: Verify PHP version
         run: |
           echo "=== WordPress PHP Info ==="
-          wp-env run cli wp --info
+          npx wp-env run cli php -v
           
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
