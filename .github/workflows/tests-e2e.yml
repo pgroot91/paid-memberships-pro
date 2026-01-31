@@ -12,8 +12,18 @@ jobs:
   cypress:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        php: ["7.4", "8.5"]
+        phpVersion:
+          - '7.4'
+          - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+        wpVersion:
+          - '6.5'
+          - '6.7'
+          - '6.9'
         browser: ["chrome"]
       
     services:
@@ -77,18 +87,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install
 
-      - name: Remove any cached wp-env
-        run: rm -rf .wp-env
-
-      - name: Set PHP version for wp-env
+      - name: Configure WordPress
         run: |
-          echo '{
-            "env": {
-              "tests": {
-                "phpVersion": "'${{ matrix.php }}'"
-              }
-            }
-          }' > .wp-env.override.json
+          echo '{"core": "WordPress/WordPress#tags/${{ matrix.wpVersion }}","phpVersion": "${{ matrix.phpVersion }}" }' > .wp-env.override.json
 
       - name: Start WordPress Environment
         run: npm run env:start
@@ -108,7 +109,7 @@ jobs:
         run: |
           echo "=== WordPress PHP Info ==="
           npx wp-env run cli php -v
-          
+
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
         run: |
@@ -123,7 +124,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots-${{ matrix.php }}-${{ matrix.browser }}
+          name: cypress-screenshots-${{ matrix.browser }}
           path: tests/e2e/cypress/reports/screenshots
 
       - name: Upload Cypress videos
@@ -131,7 +132,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos-${{ matrix.php }}-${{ matrix.browser }}
+          name: cypress-videos-${{ matrix.browser }}
           path: tests/e2e/cypress/reports/videos
 
       - name: Fail job if tests failed
