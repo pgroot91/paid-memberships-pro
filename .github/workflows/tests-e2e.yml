@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         wpVersion: ["5.2", "6.9"]
-        phpVersion: ["5.6", "7.3", "8.5"]
+        phpVersion: ["8.0", "8.3", "8.5"]
         browser: ["chrome", "firefox", "webkit"]
       
     services:
