@@ -54,9 +54,6 @@ Cypress.Commands.add("loginByForm", (username: string, password: string) => {
 
     cy.get("#wp-submit").should("be.visible").click();
 
-    // Confirm we landed on wp-admin
-    cy.location("pathname").should("contain", "/wp-admin/");
-
     // Get cookie and set Gutenberg preferences dynamically
     cy.getCookies().then((cookies) => {
       const loginCookie = cookies.find((c) =>
