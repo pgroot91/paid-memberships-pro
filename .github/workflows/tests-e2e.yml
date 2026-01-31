@@ -86,7 +86,11 @@ jobs:
           echo '{"core": "WordPress/WordPress#tags/${{ matrix.wpVersion }}","phpVersion": "${{ matrix.phpVersion }}" }' > .wp-env.override.json
 
       - name: Start WordPress Environment
-        run: npm run env:start
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 4
+          max_attempts: 3
+          command: npm run env:start --debug
 
       - name: Wait for WordPress to be ready
         run: |
