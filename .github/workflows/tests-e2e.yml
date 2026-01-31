@@ -105,10 +105,22 @@ jobs:
             sleep 5;
           done
 
-      - name: Verify PHP version
+      - name: Verify WordPress and PHP versions
         run: |
           echo "=== WordPress PHP Info ==="
           npx wp-env run cli php -v
+
+          echo "=== WordPress Version ==="
+          npx wp-env run cli wp core version
+
+          echo "=== Verify matches matrix ==="
+          wp_version=$(npx wp-env run cli wp core version)
+          if [ "$wp_version" != "${{ matrix.wpVersion }}" ]; then
+            echo "❌ WordPress version mismatch! Expected ${{ matrix.wpVersion }}, got $wp_version"
+            exit 1
+          else
+            echo "✅ WordPress version matches matrix: $wp_version"
+          fi
 
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
