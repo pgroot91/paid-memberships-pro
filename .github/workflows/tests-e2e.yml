@@ -18,7 +18,7 @@ jobs:
       matrix:
         wpVersion: ["5.2", "6.9"]
         phpVersion: ["5.6", "7.4", "8.5"]
-        browser: ["chrome", firefox", "webkit"]
+        browser: ["chrome", "firefox", "webkit"]
       
     services:
       mailpit:
@@ -90,7 +90,7 @@ jobs:
         with:
           timeout_minutes: 4
           max_attempts: 3
-          command: npm run env:start --debug
+          command: npm run env:start -- --debug
 
       - name: Wait for WordPress to be ready
         run: |
@@ -123,7 +123,7 @@ jobs:
       - name: Run Cypress Tests in ${{ matrix.browser }}
         id: tests
         run: |
-          npx cypress run --browser ${{ matrix.browser }} --config-file=cypress.config.test.js
+          npx cypress run -b ${{ matrix.browser }} --config-file=cypress.config.test.js
 
       - name: Fix permissions for Cypress output
         if: always()
