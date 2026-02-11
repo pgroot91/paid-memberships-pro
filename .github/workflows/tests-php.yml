@@ -1,13 +1,13 @@
-name: 'Codeception Tests'
+name: "Codeception Tests"
 on:
   pull_request:
     paths:
-      - '*/**.php'
-      - 'tests/**'
-      - '*.php'
-      - 'composer.json'
-      - 'codeception.*.yml'
-      - '.github/workflows/tests-php.yml'
+      - "*/**.php"
+      - "tests/**"
+      - "*.php"
+      - "composer.json"
+      - "codeception.*.yml"
+      - ".github/workflows/tests-php.yml"
 jobs:
   test:
     strategy:
@@ -102,7 +102,7 @@ jobs:
       # ------------------------------------------------------------------------------
       - name: Install and activate TwentyTwenty
         if: ${{ matrix.suite == 'acceptance' }}
-        run:  ${TRIC_BIN} site-cli theme install twentytwenty --activate
+        run: ${TRIC_BIN} site-cli theme install twentytwenty --activate
       # ------------------------------------------------------------------------------
       # Run tests
       # ------------------------------------------------------------------------------

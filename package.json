@@ -17,7 +17,23 @@
     "lint:js": "wp-scripts lint-js",
     "packages-update": "wp-scripts packages-update",
     "plugin-zip": "wp-scripts plugin-zip",
-    "start": "wp-scripts start"
+    "start": "wp-scripts start",
+    "env:start": "wp-env start",
+    "env:clean": "wp-env clean",
+    "env:destroy": "wp-env destroy",
+    "env:stop": "wp-env stop",
+    "env:start:dev": "wp-env start --env=development",
+    "env:start:test": "wp-env start --env=tests",
+    "cy:open:launch:dev": "cypress open -b chrome --config-file cypress.config.dev.js",
+    "cy:run:launch:dev": "cypress run -b chrome --config-file cypress.config.dev.js",
+    "cy:open:launch:test": "cypress open -b chrome --config-file cypress.config.test.js",
+    "cy:run:launch:test": "cypress run -b chrome --config-file cypress.config.test.js",
+    "cy:open:dev": "run-s env:destroy env:start:dev cy:open:launch:dev",
+    "cy:run:dev": "run-s env:destroy env:start:dev cy:run:launch:dev",
+    "cy:open:test": "run-s env:destroy env:start:test cy:open:launch:test",
+    "cy:run:test": "run-s env:destroy env:start:test cy:run:launch:test",
+    "env:start:all": "bash ./bin/docker-up.sh",
+    "env:stop:all": "bash ./bin/docker-down.sh"
   },
   "keywords": [
     "wordpress",
@@ -27,7 +43,13 @@
   "author": "Stranger Studios",
   "license": "GPL-2.0",
   "devDependencies": {
-    "@wordpress/scripts": "^23.5.0"
+    "@wordpress/env": "^10.38.0",
+    "@wordpress/scripts": "^23.5.0",
+    "cypress": "^15.9.0",
+    "cypress-mailpit": "^1.4.0",
+    "npm-run-all": "^4.1.5",
+    "playwright-webkit": "^1.58.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "classnames": "^2.3.2"

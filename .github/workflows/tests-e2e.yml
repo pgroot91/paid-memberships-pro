@@ -1,0 +1,156 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  cypress:
+    name: Run Cypress Test Matrix (WordPress, PHP, Browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        wpVersion: ["6.9"]
+        phpVersion: ["8.0", "8.3", "8.5"]
+        browser: ["chrome", "firefox", "webkit"]
+      
+    services:
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+        options: >-
+          --health-cmd="wget --spider -q http://localhost:8025 || exit 1"
+          --health-interval=2s
+          --health-timeout=2s
+          --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache
+
+      - name: Cache Cypress binary
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('package-lock.json') }}
+
+      - name: Cache Playwright browsers
+        if: runner.os == 'Linux' && matrix.browser == 'webkit'
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install NPM dependencies
+        run: npm ci
+      
+      - name: Install WebKit system dependencies (Linux)
+        if: runner.os == 'Linux' && matrix.browser == 'webkit'
+        run: npx playwright install-deps webkit
+
+      - name: Install Playwright browsers
+        if: matrix.browser == 'webkit'
+        run: npx playwright install webkit
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-cache
+
+      - name: Install Composer dependencies
+        run: composer install
+
+      - name: Configure WordPress
+        run: |
+          echo '{"core": "WordPress/WordPress#tags/${{ matrix.wpVersion }}","phpVersion": "${{ matrix.phpVersion }}" }' > .wp-env.override.json
+
+      - name: Start WordPress Environment
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 4
+          max_attempts: 3
+          command: npm run env:start -- --debug
+
+      - name: Wait for WordPress to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8889 | grep -q "WordPress"; then
+              echo "WordPress is ready";
+              break;
+            fi
+            echo "Waiting for WordPress... ($i/30)";
+            sleep 5;
+          done
+
+      - name: Verify WordPress and PHP versions
+        run: |
+          echo "=== WordPress PHP Info ==="
+          npx wp-env run cli php -v
+
+          echo "=== WordPress Version ==="
+          npx wp-env run cli wp core version
+
+          echo "=== Verify matches matrix ==="
+          wp_version=$(npx wp-env run cli wp core version)
+          if [ "$wp_version" != "${{ matrix.wpVersion }}" ]; then
+            echo "❌ WordPress version mismatch! Expected ${{ matrix.wpVersion }}, got $wp_version"
+            exit 1
+          else
+            echo "✅ WordPress version matches matrix: $wp_version"
+          fi
+
+      - name: Run Cypress Tests in ${{ matrix.browser }}
+        id: tests
+        run: |
+          npx cypress run -b ${{ matrix.browser }} --config-file=cypress.config.test.js
+
+      - name: Fix permissions for Cypress output
+        if: always()
+        run: sudo chown -R $USER:$USER tests/e2e/cypress
+
+      - name: Upload Cypress screenshots
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ matrix.browser }}
+          path: tests/e2e/cypress/reports/screenshots
+
+      - name: Upload Cypress videos
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos-${{ matrix.browser }}
+          path: tests/e2e/cypress/reports/videos
+
+      - name: Fail job if tests failed
+        if: failure()
+        run: |
+          echo "❌ One or more e2e tests failed."
+          exit 1
+
+      - name: Stop WordPress Environment
+        if: always()
+        run: npm run env:stop
